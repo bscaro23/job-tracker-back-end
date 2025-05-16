@@ -14,7 +14,7 @@ const schoolSchema = new mongoose.Schema(
         },
         coordinates: {
             type: String,
-            required: true,
+            required: false,
         },
         ageRange: {
             type: String,
@@ -26,14 +26,18 @@ const schoolSchema = new mongoose.Schema(
             required: true,
             enum: ['State', 'Independent', 'Academy']
         },
-        currentJobs: {
+        currentJobs: [
+        {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Job'
+            ref: 'Job',
         },
-        pastJobs: {
+        ],
+        pastJobs: [
+        {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Job'
-        }, 
+            ref: 'Job',
+        },
+        ],
         author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     },
     {timestamps: true}

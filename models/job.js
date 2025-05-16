@@ -29,7 +29,8 @@ const JobSchema = new mongoose.Schema({
   },
   coordinates: {
       type: String,
-      required: true,
+      required: false,
+      default: 'Need to add'
   },
   author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 });

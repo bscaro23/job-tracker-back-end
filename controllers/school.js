@@ -11,6 +11,8 @@ const router = express.Router();
 router.post('/', verifyToken, async (req, res) => {
     try {
         req.body.author = req.user._id;
+        req.body.coordinates = 'Need to add';
+        console.log(req.body);
         const school = await School.create(req.body);
         school._doc.author = req.user;
         res.status(201).json(school);
@@ -84,18 +86,20 @@ router.delete('/:schoolId', verifyToken, async (req, res) => {
 router.post('/:schoolId/jobs', verifyToken, async (req, res) => {
   try {
     const school = await School.findById(req.params.schoolId);
+  
     req.body.author = req.user._id;
     req.body.coordinates = school.coordinates;
-
+    
     
     const job = await Job.create(req.body);
-    job._doc.author = req.user;
 
     school.currentJobs.push(job._id);
     await school.save();
-    
+
     //Check that it is present in both database models correctly
-    res.status(201).json(job, school.currentJobs[-1]);
+    res.status(201).json({
+      job: job,
+      addedToSchool: school.currentJobs[school.currentJobs.length - 1]});
   } catch (err) {
     res.status(500).json({ err: err.message });
   }
