@@ -3,6 +3,7 @@
 const express = require("express");
 const verifyToken = require("../middleware/verify-token.js");
 const School = require("../models/school.js");
+const Job = require("../models/job.js");
 const router = express.Router();
 
 // add routes here
@@ -31,7 +32,12 @@ router.get('/', verifyToken, async (req, res) => {
 
 router.get('/:schoolId', verifyToken, async (req, res) => {
   try {
-    const school = await School.findById(req.params.schoolId).populate('author');
+    const school = await School.findById(req.params.schoolId).populate([
+      'author',
+      'pastJobs',
+      'currentJobs',
+      
+    ]);
     res.status(200).json(school);
   } catch (err) {
     res.status(500).json({err: err.message});
@@ -73,6 +79,66 @@ router.delete('/:schoolId', verifyToken, async (req, res) => {
   } catch (err) {
     res.status(500).json({ err: err.message });
   }
-})
+});
+
+router.post('/:schoolId/jobs', verifyToken, async (req, res) => {
+  try {
+    const school = await School.findById(req.params.schoolId);
+    req.body.author = req.user._id;
+    req.body.coordinates = school.coordinates;
+
+    
+    const job = await Job.create(req.body);
+    job._doc.author = req.user;
+
+    school.currentJobs.push(job._id);
+    await school.save();
+    
+    //Check that it is present in both database models correctly
+    res.status(201).json(job, school.currentJobs[-1]);
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
+});
+
+router.put("/:schoolId/jobs/:jobId", verifyToken, async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.schoolId);
+
+    // ensures the current user is the author of the job
+    if (job.author.toString() !== req.user._id) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to edit this job" });
+    }
+
+    job.text = req.body.text;
+    await job.save();
+    res.status(200).json({ message: "Job updated successfully" });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
+});
+
+
+router.delete("/:schoolId/jobs/:jobId", verifyToken, async (req, res) => {
+  try {
+    const school = await School.findById(req.params.schoolId);
+    const job = await Job.findById(req.params.jobId);
+
+    // ensures the current user is the author of the job
+    if (job.author.toString() !== req.user._id) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to edit this job" });
+    }
+    await Job.findByIdAndDelete(req.params.jobId);
+    school.currentJobs.remove({ _id: req.params.jobId });
+    await school.save();
+    res.status(200).json({ message: "Job deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
+});
 
 module.exports = router;

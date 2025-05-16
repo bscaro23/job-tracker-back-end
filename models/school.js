@@ -12,6 +12,10 @@ const schoolSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+        coordinates: {
+            type: String,
+            required: true,
+        },
         ageRange: {
             type: String,
             required:true,

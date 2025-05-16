@@ -26,7 +26,12 @@ const JobSchema = new mongoose.Schema({
   postedBefore: {
     type: Boolean,
     required: true
-  }
+  },
+  coordinates: {
+      type: String,
+      required: true,
+  },
+  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 });
 
 module.exports = mongoose.model('Job', JobSchema);
